@@ -5,9 +5,10 @@ void draw_player(Entity *player) {
    printf("drawing player %s", player->name);
 }
 
+Vector2 nullVec = {NAN, NAN};
+
 int main(void)
 {
-   // TODO: entity_create should return a struct, not a pointer
    Entity root = entity_create(
          ENTITY_ROOT,
          "RootEntity",
@@ -17,30 +18,30 @@ int main(void)
          0                        // child capacity
          );
 
-   Entity child = entity_create(
-         ENTITY_PLAYER,
-         "title",
-         (Vector2){50, 50},         // position
-         (Vector2){10, 10},     // size
-         BLUE,                     // color
-         0                        // child capacity
-         );
+   entity_add_children(&root, entity_create(
+            ENTITY_PLAYER,
+            "title",
+            (Vector2){50, 50},         // position
+            (Vector2){10, 10},     // size
+            BLUE,                     // color
+            0                        // child capacity
+            ));
+
    Entity childofchild = entity_create(
-         ENTITY_PLAYER,
+         ENTITY_BULLET,
          "recurse",
-         (Vector2){50, 50},         // position
-         (Vector2){10, 10},     // size
+         nullVec,
+         nullVec,
          BLUE,                     // color
          0                        // child capacity
          );
 
-   child.draw_self = draw_player;
-   entity_childs_append(&root, child);
-   entity_childs_append(entity_childs_get(&root, 0), childofchild);
+   //child.draw_self = draw_player;
+   entity_add_children(entity_get_child(&root, 0), childofchild);
 
 
    printf("Root type: %d\n", root.type);
-   printf("Root has %d childrens\n", entity_childs_recursive_count(&root, 12));
+   printf("Root has %d children\n", entity_recursive_count_children(&root, 12));
 
    if (entity_is_root(&root)) {
       printf("Entity root is root.\n");
@@ -48,12 +49,21 @@ int main(void)
       printf("Entity root is not root.\n");
    }
 
-   for (int i = 0; i < entity_childs_count(&root); ++i)
+   for (int i = 0; i < entity_count_children(&root); ++i)
    {
-      Entity* e = entity_childs_get(&root, i);
+      Entity* e = entity_get_child(&root, i);
       printf("%s\n", e->name);
    }
 
-   free_entity(&root);
+   typedef enum {
+      ZERO,
+      ONE,
+      TWO
+   } Numbers;
+
+   if (ENTITY_NONE == ZERO) {
+      printf("ENTITY_NONE is zero.\n");
+   }
+   entity_destroy_children(&root);
    return 0;
 }

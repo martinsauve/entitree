@@ -5,35 +5,35 @@
 #include <string.h>
 
 
-void entity_childs_resize(Entity *self, size_t new_capacity) {
-   assert(self != NULL /* attempting to resize NULL entity */);
-   if (new_capacity < self->child_count) {
-      self->child_count = new_capacity;
+void entity_children_resize(Entity *entity, size_t new_capacity) {
+   assert(entity != NULL /* attempting to resize NULL entity */);
+   if (new_capacity < entity->children_count) {
+      entity->children_count = new_capacity;
    }
-   self->childs = (Entity *)realloc(self->childs, sizeof(Entity) * new_capacity);
-   self->child_capacity = new_capacity;
+   entity->children = (Entity *)realloc(entity->children, sizeof(Entity) * new_capacity);
+   entity->children_capacity = new_capacity;
 }
 
 
-bool entity_is_ancestor(Entity *self, Entity *possible_ancestor) {
-   while (self != NULL) {
-      if (self == possible_ancestor) return true;
-      self = self->parent;
+bool entity_is_ancestor_of(Entity *possible_ancestor, Entity *entity) {
+   while (entity != NULL) {
+      if (entity == possible_ancestor) return true;
+      entity = entity->parent;
    }
    return false;
 }
 
 
-bool entity_is_descendant(Entity *self, Entity *possible_descendant) {
-   return entity_is_ancestor(possible_descendant, self);
+bool entity_is_descendant_of(Entity *possible_descendant, Entity *entity) {
+   return entity_is_ancestor_of(entity, possible_descendant);
 }
 
 
 
 
-bool entity_childs_contains(Entity *self, Entity *possible_child) {
-   for (size_t i = 0; i < self->child_count; i++) {
-      if (&self->childs[i] == possible_child) {
+bool entity_children_contains(Entity *self, Entity *possible_child) {
+   for (size_t i = 0; i < self->children_count; i++) {
+      if (&self->children[i] == possible_child) {
          return true;
       }
    }
@@ -41,63 +41,64 @@ bool entity_childs_contains(Entity *self, Entity *possible_child) {
 }
 
 
-int entity_childs_append(Entity *self, Entity child) {
-   assert(self != NULL /* attempting to append to NULL entity */);
+int entity_add_children(Entity *parent, Entity child) {
+   assert(parent != NULL /* attempting to append to NULL entity */);
 
+   // Does this check make sense anymore? We're now passing child by value
    // check for cycles
-   if (entity_is_ancestor(self, &child)) {
+   if (entity_is_ancestor_of(parent, &child)) {
       fprintf(stderr, "Error: attempting to append child that would create a cycle in entity tree\n"); //NOLINT
       return -1;
    }
 
-   if (self->child_count >= self->child_capacity) {
-      if (self->child_capacity == 0) {
-         self->child_capacity = CHILDS_DEFAULT_CAPACITY;
+   if (parent->children_count >= parent->children_capacity) {
+      if (parent->children_capacity == 0) {
+         parent->children_capacity = CHILDREN_DEFAULT_CAPACITY;
       } else {
-         self->child_capacity *= 2;
+         parent->children_capacity *= 2;
       }
-      entity_childs_resize(self, self->child_capacity);
+      entity_children_resize(parent, parent->children_capacity);
    }
-   assert(self->child_count < self->child_capacity /* child count exceeds capacity after resize */);
-   self->childs[self->child_count] = child;
-   self->child_count++;
+   assert(parent->children_count < parent->children_capacity /* child count exceeds capacity after resize */);
+   parent->children[parent->children_count] = child;
+   parent->children_count++;
    return 0;
 }
 
 
-Entity *entity_childs_get(Entity *self, size_t index) {
-   return (index < self->child_count) ? &self->childs[index] : NULL;
+Entity *entity_get_child(Entity *entity, size_t index) {
+   return (index < entity->children_count) ? &entity->children[index] : NULL;
 }
 
 
-int entity_childs_count(Entity *self) {
-   return self->child_count;
+int entity_count_children(Entity *parent) {
+   return parent->children_count;
 }
 
 
-int entity_childs_recursive_count(Entity *self, int depth_limit) {
+int entity_recursive_count_children(Entity *parent, int depth_limit) {
    if (depth_limit == 0) {
-      fprintf(stderr, "Warning: depth limit reached in entity_childs_recursive_count\n"); //NOLINT
+      fprintf(stderr, "Warning: depth limit reached in entity_recursive_count_children\n"); //NOLINT
       return 0;
    }
-   int total = self->child_count;
-   for (size_t i = 0; i < self->child_count; i++) {
-      total += entity_childs_recursive_count(&self->childs[i], depth_limit - 1);
+   int total = parent->children_count;
+   for (size_t i = 0; i < parent->children_count; i++) {
+      total += entity_recursive_count_children(&parent->children[i], depth_limit - 1);
    }
    return total;
 }
 
 
-Entity *entity_get_parent(Entity *self) {
-   return self->parent;
+Entity *entity_get_parent(Entity *entity) {
+   return entity->parent;
 }
 
-bool entity_is_root(Entity *self) {
-   return (self->parent == NULL);
+bool entity_is_root(Entity *entity) {
+   return (entity->parent == NULL);
 }
 
-Entity *entity_get_root(Entity *self) {
-   Entity *current = self;
+Entity *entity_get_root(Entity *entity) {
+   Entity *current = entity;
    while (!entity_is_root(current)) {
       current = current->parent;
    }
@@ -109,7 +110,7 @@ Entity entity_create(
       Vector2 position,
       Vector2 size,
       Color color,
-      size_t child_capacity
+      size_t children_capacity
       ) {
 
    Entity new_entity = {0};
@@ -121,10 +122,10 @@ Entity entity_create(
    new_entity.speed    = (Vector2){0};
 
    new_entity.parent         = NULL;
-   new_entity.child_count    = 0;
-   new_entity.child_capacity = 0;
-   new_entity.childs         = NULL;
-   new_entity.draw_self      = NULL;
+   new_entity.children_count    = 0;
+   new_entity.children_capacity = 0;
+   new_entity.children         = NULL;
+   new_entity.draw_func      = NULL;
 
    if (name != NULL) {
       assert(strlen(name) < sizeof(new_entity.name) /* entity name too long (limited at 256 chars) */);
@@ -134,10 +135,10 @@ Entity entity_create(
    }
 
    // Pre-allocate child array
-   if (child_capacity > 0) {
-      new_entity.childs = malloc(sizeof(Entity) * child_capacity);
-      assert(new_entity.childs != NULL /* memory allocation for children failed */);
-      new_entity.child_capacity = child_capacity;
+   if (children_capacity > 0) {
+      new_entity.children = malloc(sizeof(Entity) * children_capacity);
+      assert(new_entity.children != NULL /* memory allocation for children failed */);
+      new_entity.children_capacity = children_capacity;
    }
 
    return new_entity; // Return by value
@@ -145,14 +146,14 @@ Entity entity_create(
 
 
 
-void free_entity(Entity *self) {
-   assert(self != NULL /* attemptying to free NULL entity */);
+void entity_destroy_children(Entity *entity) {
+   assert(entity != NULL /* attemptying to free NULL entity */);
 
-   if (self->childs != NULL) {
-      for (size_t i = 0; i < self->child_count; i++) {
-         free_entity(&self->childs[i]);
+   if (entity->children != NULL) {
+      for (size_t i = 0; i < entity->children_count; i++) {
+         entity_destroy_children(&entity->children[i]);
       }
-      free(self->childs);
-      self->childs = NULL;
+      free(entity->children);
+      entity->children = NULL;
    }
 }
