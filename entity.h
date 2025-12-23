@@ -46,7 +46,7 @@ Entity *entity_childs_get(Entity *self, size_t index);
 Entity *entity_get_parent(Entity *self);
 Entity *entity_get_root(Entity *self);
 
-Entity *entity_create(EntityType type, char* name, Vector2 position, Vector2 size, Color color, size_t child_capacity);
+Entity entity_create(EntityType type, const char* name, Vector2 position, Vector2 size, Color color, size_t child_capacity);
 void free_entity(Entity *self);
 
 

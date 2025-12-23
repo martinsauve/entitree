@@ -2,6 +2,8 @@ CFLAGS += -I./raylib/include -L./raylib/lib -Wall -Wextra -Wpedantic -O3 --std=c
 STATIC_LFLAGS += -l:libraylib.a -lm
 LFLAGS += -lraylib -lm
 
+test: test.c entity.c entity.h
+	gcc -o test test.c entity.c && ./test
 
 static: main.c makefile dl
 	gcc $(CFLAGS) main.c -o invaders $(STATIC_LFLAGS)

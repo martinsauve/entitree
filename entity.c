@@ -103,46 +103,46 @@ Entity *entity_get_root(Entity *self) {
    }
    return current;
 }
-
-
-Entity *entity_create(
+Entity entity_create(
       EntityType type,
-      char *name,
+      const char *name,
       Vector2 position,
       Vector2 size,
       Color color,
       size_t child_capacity
       ) {
 
-   Entity *new_entity = (Entity *)malloc(sizeof(Entity));
-   assert(new_entity != NULL /* memory allocation failed for new entity */);
+   Entity new_entity = {0};
 
-   new_entity->type     = type;
-   new_entity->position = position;
-   new_entity->size     = size;
-   new_entity->color    = color;
-   new_entity->speed    = (Vector2){0};
+   new_entity.type     = type;
+   new_entity.position = position;
+   new_entity.size     = size;
+   new_entity.color    = color;
+   new_entity.speed    = (Vector2){0};
 
-   new_entity->parent         = NULL;
-   new_entity->child_count    = 0;
-   new_entity->child_capacity = 0;
-   new_entity->childs         = NULL;
+   new_entity.parent         = NULL;
+   new_entity.child_count    = 0;
+   new_entity.child_capacity = 0;
+   new_entity.childs         = NULL;
+   new_entity.draw_self      = NULL;
 
    if (name != NULL) {
-      assert(strlen(name) < sizeof(new_entity->name) /* entity name too long (limited at 256 chars*/);
-      snprintf(new_entity->name, sizeof(new_entity->name), "%s", name); //NOLINT
+      assert(strlen(name) < sizeof(new_entity.name) /* entity name too long (limited at 256 chars) */);
+      snprintf(new_entity.name, sizeof(new_entity.name), "%s", name);
    } else {
-      new_entity->name[0] = '\0';
+      new_entity.name[0] = '\0';
    }
 
+   // Pre-allocate child array
    if (child_capacity > 0) {
-      entity_childs_resize(new_entity, child_capacity);
+      new_entity.childs = malloc(sizeof(Entity) * child_capacity);
+      assert(new_entity.childs != NULL /* memory allocation for children failed */);
+      new_entity.child_capacity = child_capacity;
    }
 
-   new_entity->draw_self = NULL;
-
-   return new_entity;
+   return new_entity; // Return by value
 }
+
 
 
 void free_entity(Entity *self) {
