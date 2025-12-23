@@ -1,6 +1,7 @@
-CFLAGS += -I./raylib/include -L./raylib/lib -Wall -Wextra -Wpedantic -O3
+CFLAGS += -I./raylib/include -L./raylib/lib -Wall -Wextra -Wpedantic -O3 --std=c11
 STATIC_LFLAGS += -l:libraylib.a -lm
 LFLAGS += -lraylib -lm
+
 
 static: main.c makefile dl
 	gcc $(CFLAGS) main.c -o invaders $(STATIC_LFLAGS)
@@ -16,6 +17,9 @@ dl: download-raylib.sh
 	@if [ ! -d "raylib" ]; then \
 		./download-raylib.sh;\
 		fi
+
+linter:
+	bear -- make -B static
 
 run: static
 	./invaders

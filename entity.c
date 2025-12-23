@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "entity.h"
+#include <string.h>
 
 
-void entity_childs_resize(Entity *self, int new_capacity) {
+void entity_childs_resize(Entity *self, size_t new_capacity) {
    assert(self != NULL /* attempting to resize NULL entity */);
    if (new_capacity < self->child_count) {
       self->child_count = new_capacity;
@@ -51,7 +52,7 @@ int entity_childs_append(Entity *self, Entity child) {
 
    if (self->child_count >= self->child_capacity) {
       if (self->child_capacity == 0) {
-         self->child_capacity = 64;
+         self->child_capacity = CHILDS_DEFAULT_CAPACITY;
       } else {
          self->child_capacity *= 2;
       }
@@ -104,7 +105,15 @@ Entity *entity_get_root(Entity *self) {
 }
 
 
-Entity *entity_create(EntityType type, Vector2 position, Vector2 size, Color color, size_t child_capacity) {
+Entity *entity_create(
+      EntityType type,
+      char *name,
+      Vector2 position,
+      Vector2 size,
+      Color color,
+      size_t child_capacity
+      ) {
+
    Entity *new_entity = (Entity *)malloc(sizeof(Entity));
    assert(new_entity != NULL /* memory allocation failed for new entity */);
 
@@ -118,6 +127,13 @@ Entity *entity_create(EntityType type, Vector2 position, Vector2 size, Color col
    new_entity->child_count    = 0;
    new_entity->child_capacity = 0;
    new_entity->childs         = NULL;
+
+   if (name != NULL) {
+      assert(strlen(name) < sizeof(new_entity->name) /* entity name too long (limited at 256 chars*/);
+      snprintf(new_entity->name, sizeof(new_entity->name), "%s", name); //NOLINT
+   } else {
+      new_entity->name[0] = '\0';
+   }
 
    if (child_capacity > 0) {
       entity_childs_resize(new_entity, child_capacity);

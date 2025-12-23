@@ -1,7 +1,5 @@
 #include <raylib.h>
 #include <raymath.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 #include <assert.h>
 #include "entity.h"
@@ -92,7 +90,7 @@ int main(void)
 {
    Entity player = {0};
    player.type     = ENTITY_PLAYER;
-   player.position = (Vector2){ SCREEN_WIDTH/2 - 16, SCREEN_HEIGHT - 48 };
+   player.position = (Vector2){ SCREEN_WIDTH/2.0f - 16, SCREEN_HEIGHT - 48 };
    player.size     = (Vector2){ 32, 32 };
    player.color    = BLUE;
    player.speed    = (Vector2){0};
@@ -101,18 +99,6 @@ int main(void)
 
 
    // entity test
-   Entity parent;
-   Vector2 pos = {};
-   Vector2 siz = {16,16};
-   Color col = RED;
-   init_entity(&parent, ENTITY_PLAYER, pos, siz, col, 4); // parent with 4 childs
-   init_entity(&parent.childs[0], ENTITY_BULLET, pos, siz, YELLOW, 0);
-   init_entity(&parent.childs[1], ENTITY_BULLET, pos, siz, GREEN, 0);
-   init_entity(&parent.childs[2], ENTITY_BULLET, pos, siz, GREEN, 0);
-   init_entity(&parent.childs[3], ENTITY_BULLET, pos, siz, GREEN, 0);
-
-   free_entity(&parent);
-
    // RL SETUP
    SetRandomSeed(time(NULL));
    SetConfigFlags(RL_WINDOW_CONFIG_FLAGS);
