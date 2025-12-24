@@ -3,6 +3,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <stdlib.h>
+#include "../third_party/uuid4/src/uuid4.h"
 
 #define CHILDREN_DEFAULT_CAPACITY 64
 
@@ -22,6 +23,7 @@ typedef struct entity {
    Color       color;
    Vector2     speed;
    char        name[256];
+   char        uuid[UUID4_LEN];
 
    struct entity  *parent;
 

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "entity.h"
 #include "../third_party/uuid4/src/uuid4.h"
-// TODO: compile third_party/uuid4/src/uuid4.c
 
 void draw_player(Entity *player) {
    printf("drawing player %s", player->name);
@@ -76,12 +75,13 @@ int test_entity(void)
    if (ENTITY_NONE == ZERO) {
       printf("ENTITY_NONE is zero.\n");
    }
+   printf("root UUID4 is %s\n", root.uuid);
    entity_destroy_children(&root);
    return 0;
 }
 
 int main(void)
 {
-   //test_entity();
-   test_uuid();
+   test_entity();
+   //test_uuid();
 }

@@ -104,6 +104,7 @@ Entity *entity_get_root(Entity *entity) {
    }
    return current;
 }
+
 Entity entity_create(
       EntityType type,
       const char *name,
@@ -127,6 +128,12 @@ Entity entity_create(
    new_entity.children_capacity = 0;
    new_entity.children          = NULL;
    new_entity.draw_func         = NULL;
+
+   // generate UUID4
+   // TODO: handle the crash better
+   //if (uuid4_init() == UUID4_EFAILURE) exit(1);
+   assert(uuid4_init() == UUID4_ESUCCESS /* unable to generate UUID for entity */);
+   uuid4_generate(new_entity.uuid);
 
    if (name != NULL) {
       assert(strlen(name) < sizeof(new_entity.name) /* entity name too long (limited at 256 chars) */);

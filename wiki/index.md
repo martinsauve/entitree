@@ -1,5 +1,7 @@
 ## TODO :
 
+- [X] implement uuid
+
 - [ ] Figure out licence stuff (and properly acknowledge deps)
 
 - [.] the functions and variables should be renamed and documented properly.
@@ -20,7 +22,6 @@
 
 - [ ] Add a tag system to entities for searching/filtering
             > A simple array of strings maybe sufficient.
-            > Probably needs an UUID system too.
 
 - [ ] Implement a debug tree printer (a la unix tree command).
 
