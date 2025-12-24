@@ -1,5 +1,7 @@
 ## TODO :
 
+- [ ] Figure out licence stuff (and properly acknowledge deps)
+
 - [.] the functions and variables should be renamed and documented properly.
 
 - [ ] Think about a potential array of custom callbacks identified by name

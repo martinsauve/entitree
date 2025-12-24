@@ -111,7 +111,8 @@ Entity entity_create(
       Vector2 size,
       Color color,
       size_t children_capacity
-      ) {
+      )
+{
 
    Entity new_entity = {0};
 
@@ -121,15 +122,15 @@ Entity entity_create(
    new_entity.color    = color;
    new_entity.speed    = (Vector2){0};
 
-   new_entity.parent         = NULL;
+   new_entity.parent            = NULL;
    new_entity.children_count    = 0;
    new_entity.children_capacity = 0;
-   new_entity.children         = NULL;
-   new_entity.draw_func      = NULL;
+   new_entity.children          = NULL;
+   new_entity.draw_func         = NULL;
 
    if (name != NULL) {
       assert(strlen(name) < sizeof(new_entity.name) /* entity name too long (limited at 256 chars) */);
-      snprintf(new_entity.name, sizeof(new_entity.name), "%s", name);
+      snprintf(new_entity.name, sizeof(new_entity.name), "%s", name); //NOLINT
    } else {
       new_entity.name[0] = '\0';
    }
@@ -146,6 +147,7 @@ Entity entity_create(
 
 
 
+// TODO: this function is recursive, figure out the implications for deep entity trees.
 void entity_destroy_children(Entity *entity) {
    assert(entity != NULL /* attemptying to free NULL entity */);
 

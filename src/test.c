@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "entity.h"
+#include "../third_party/uuid4/src/uuid4.h"
+// TODO: compile third_party/uuid4/src/uuid4.c
 
 void draw_player(Entity *player) {
    printf("drawing player %s", player->name);
@@ -7,7 +9,17 @@ void draw_player(Entity *player) {
 
 Vector2 nullVec = {NAN, NAN};
 
-int main(void)
+int test_uuid(void)
+{
+   char buf[UUID4_LEN];
+
+   uuid4_init();
+   uuid4_generate(buf);
+   printf("%s\n", buf);
+   return EXIT_SUCCESS;
+}
+
+int test_entity(void)
 {
    Entity root = entity_create(
          ENTITY_ROOT,
@@ -66,4 +78,10 @@ int main(void)
    }
    entity_destroy_children(&root);
    return 0;
+}
+
+int main(void)
+{
+   //test_entity();
+   test_uuid();
 }
