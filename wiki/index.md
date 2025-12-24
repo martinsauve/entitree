@@ -1,8 +1,6 @@
-## TODO:
+## TODO :
 
-- [ ] entity_create() should return the struct by value, not allocate it
-            > This is dumb to malloc from there because the user should handle the lifetime of only root entities, and could do so on the stack
-            > the child entities are passed by value anyways and owned by the parents.
+- [.] the functions and variables should be renamed and documented properly.
 
 - [ ] Think about a potential array of custom callbacks identified by name
             > Could be used like `run_callbacks_recursive(&root, "callback_name")`
@@ -32,5 +30,10 @@
             > arguably not a better experience than writing code directly. (but it allows tools to generate levels)
             > Maybe just provide the serialization and let users figure out how to handle callbacks themselves (with codegen, dlopen or python bindings).
 
+## DONE :
+
+- [X] entity_create() should return the struct by value, not allocate it
+            > This is dumb to malloc from there because the user should handle the lifetime of only root entities, and could do so on the stack
+            > the child entities are passed by value anyways and owned by the parents.
 
 [GPT summary](GPT summary)
