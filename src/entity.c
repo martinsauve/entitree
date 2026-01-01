@@ -6,6 +6,57 @@
 #include <errno.h>
 #include <limits.h>
 
+void debug_entity_flags_string(EntityFlags flags, char *buffer, size_t buffer_size) {
+   if (flags == ENTITY_LOGIC) { // special case for logic-only entities
+      snprintf(buffer, buffer_size, "ENTITY_LOGIC"); //NOLINT
+      return;
+   }
+   buffer[0] = '\0'; // initialize buffer to empty string
+   if ((flags & ENTITY_IS_3D))    strncat(buffer, "ENTITY_3D,", buffer_size - strlen(buffer) - 1); //NOLINT
+   if (flags & ENTITY_DRAWABLE)   strncat(buffer, "ENTITY_DRAWABLE,", buffer_size - strlen(buffer) - 1); //NOLINT
+   if (flags & ENTITY_MOVABLE)    strncat(buffer, "ENTITY_MOVABLE,", buffer_size - strlen(buffer) - 1); //NOLINT
+   if (flags & ENTITY_COLLIDABLE) strncat(buffer, "ENTITY_COLLIDABLE,", buffer_size - strlen(buffer) - 1); //NOLINT
+   // Remove trailing comma if present
+   size_t len = strlen(buffer);
+   if (len > 0 && buffer[len - 1] == ',') {
+      buffer[len - 1] = '\0';
+   }
+}
+
+void debug_print_entity_flags(EntityFlags flags) {
+   if (flags == ENTITY_LOGIC) { // special case for logic-only entities
+      printf("ENTITY_LOGIC\n");
+      return;
+   }
+   if ((flags & ENTITY_IS_3D))    printf("ENTITY_3D,");
+   if (flags & ENTITY_DRAWABLE)   printf("ENTITY_DRAWABLE,");
+   if (flags & ENTITY_MOVABLE)    printf("ENTITY_MOVABLE,");
+   if (flags & ENTITY_COLLIDABLE) printf("ENTITY_COLLIDABLE,");
+   printf("\n");
+}
+
+void debug_print_entity_flags_table(EntityFlags flags) {
+   char twoD       = ' ';
+   char threeD     = ' ';
+   char drawable   = ' ';
+   char movable    = ' ';
+   char collidable = ' ';
+
+   if (!(flags & ENTITY_IS_3D))   twoD       = 'X';
+   if (flags & ENTITY_IS_3D)      threeD     = 'X';
+   if (flags & ENTITY_DRAWABLE)   drawable   = 'X';
+   if (flags & ENTITY_MOVABLE)    movable    = 'X';
+   if (flags & ENTITY_COLLIDABLE) collidable = 'X';
+
+   printf(" ┌───────────────────────────────────────────┐\n");
+   printf(" │               ENTITY FLAGS                │\n");
+   printf(" ├────┬────┬──────────┬─────────┬────────────┤\n");
+   printf(" │ 2D │ 3D │ DRAWABLE │ MOVABLE │ COLLIDABLE │\n");
+   printf(" ├────┼────┼──────────┼─────────┼────────────┤\n");
+   printf(" │ %c  │ %c  │    %c     │    %c    │     %c      │\n", twoD, threeD, drawable, movable, collidable);
+   printf(" └────┴────┴──────────┴─────────┴────────────┘\n");
+}
+
 
 void entity_children_resize(Entity *entity, size_t new_capacity) {
    assert(entity != NULL /* attempting to resize NULL entity */);
@@ -114,10 +165,10 @@ Entity *entity_get_root(Entity *entity) {
 }
 
 Entity entity_create(
-      EntityType type,
+      EntityFlags flags,
       const char *name,
-      Vector2 position,
-      Vector2 size,
+      EntityPos pos,
+      EntitySize size,
       Color color,
       size_t children_capacity
       )
@@ -125,11 +176,11 @@ Entity entity_create(
 
    Entity new_entity = {0};
 
-   new_entity.type     = type;
-   new_entity.position = position;
-   new_entity.size     = size;
-   new_entity.color    = color;
-   new_entity.speed    = (Vector2){0};
+   new_entity.flags     = flags;
+   new_entity.pos       = pos;
+   new_entity.size      = size;
+   new_entity.color     = color;
+   new_entity.speed     = (EntitySpeed){0};
 
    // generate UUID4
    if (uuid4_init() == UUID4_EFAILURE) {
@@ -149,7 +200,7 @@ Entity entity_create(
 
    // Pre-allocate children array
    if (children_capacity > 0) {
-      new_entity.children = calloc(sizeof(Entity), children_capacity);
+      new_entity.children = calloc(children_capacity, sizeof(Entity));
       if (new_entity.children == NULL){
          errno = ENOMEM;
          return (Entity){0}; // error allocating the children array
@@ -159,6 +210,36 @@ Entity entity_create(
 
    new_entity.is_valid = true;
    return new_entity;
+}
+
+
+// TODO: This function should probably be removed, it is trivial to do the check from within the callback.
+void entity_foreach_children_recursive_filtered(
+      Entity *entity,
+      int depth,
+      void (*callback)(struct entity *entity, int depth),
+      bool (*filter)(struct entity *entity)
+      ) {
+
+
+   if (entity == NULL) {
+      fprintf(stderr, "Warning: NULL entity passed to entity_foreach_children_recursive\n"); //NOLINT
+      return;
+   }
+   if (callback == NULL) {
+      fprintf(stderr, "Warning: NULL callback passed to entity_foreach_children_recursive\n"); //NOLINT
+      return;
+   }
+   if (filter == NULL) {
+      fprintf(stderr, "Warning: NULL filter passed to entity_foreach_children_recursive\n"); //NOLINT
+      return;
+   }
+   // TODO: should we callback before or after recursing into children?
+   if (filter(entity)) callback(entity, depth);
+
+   for (size_t i = 0; i < entity->children_count; ++i) {
+      entity_foreach_children_recursive_filtered(&entity->children[i], depth + 1, callback, filter);
+   }
 }
 
 // TODO: this function is recursive, figure out the implications for deep entity trees.
@@ -175,7 +256,7 @@ void entity_foreach_children_recursive(Entity *entity, int depth, void (*callbac
    // TODO: should we callback before or after recursing into children?
    callback(entity, depth);
 
-   for (int i = 0; i < entity->children_count; ++i) {
+   for (size_t i = 0; i < entity->children_count; ++i) {
       entity_foreach_children_recursive(&entity->children[i], depth + 1, callback);
    }
 }
