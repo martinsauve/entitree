@@ -24,6 +24,7 @@ void debug_entity_flags_string(EntityFlags flags, char *buffer, size_t buffer_si
 }
 
 void debug_print_entity_flags(EntityFlags flags) {
+   printf("[EntiTree] Entity Flags: ");
    if (flags == ENTITY_LOGIC) { // special case for logic-only entities
       printf("ENTITY_LOGIC\n");
       return;
@@ -48,6 +49,7 @@ void debug_print_entity_flags_table(EntityFlags flags) {
    if (flags & ENTITY_MOVABLE)    movable    = 'X';
    if (flags & ENTITY_COLLIDABLE) collidable = 'X';
 
+   printf("[EntiTree] \n");
    printf(" ┌───────────────────────────────────────────┐\n");
    printf(" │               ENTITY FLAGS                │\n");
    printf(" ├────┬────┬──────────┬─────────┬────────────┤\n");
@@ -94,14 +96,14 @@ bool entity_children_contains(Entity *self, Entity *possible_child) {
 }
 
 
-int entity_add_children(Entity *parent, Entity child) {
+Entity *entity_add_children(Entity *parent, Entity child) {
    assert(parent != NULL /* attempting to append to NULL entity */);
 
    // Does this check make sense anymore? We're now passing child by value
    // check for cycles
    if (entity_is_ancestor_of(parent, &child)) {
-      fprintf(stderr, "Error: attempting to append child that would create a cycle in entity tree\n"); //NOLINT
-      return EXIT_FAILURE;
+      fprintf(stderr, "[EntiTree]: Error: attempting to append child that would create a cycle in entity tree\n"); //NOLINT
+      return NULL;
    }
 
    if (parent->children_count >= parent->children_capacity) {
@@ -131,14 +133,14 @@ int entity_count_children(Entity *parent) {
 
 int entity_recursive_count_children(Entity *parent, int depth_limit) {
    if (depth_limit == 0) {
-      fprintf(stderr, "Warning: depth limit reached in entity_recursive_count_children\n"); //NOLINT
+      fprintf(stderr, "[EntiTree]: Warning: depth limit reached in entity_recursive_count_children\n"); //NOLINT
       errno = EOVERFLOW;
       return -1;
    }
    int total = parent->children_count;
    for (size_t i = 0; i < parent->children_count; i++) {
       if (total >= INT_MAX - 1) {
-         fprintf(stderr, "Warning: integer overflow in entity_recursive_count_children\n"); //NOLINT
+         fprintf(stderr, "[EntiTree]: Warning: integer overflow in entity_recursive_count_children\n"); //NOLINT
          errno = EOVERFLOW;
          return -1; // propagate depth limit reached
       }
@@ -223,15 +225,15 @@ void entity_foreach_children_recursive_filtered(
 
 
    if (entity == NULL) {
-      fprintf(stderr, "Warning: NULL entity passed to entity_foreach_children_recursive\n"); //NOLINT
+      fprintf(stderr, "[EntiTree]: Warning: NULL entity passed to entity_foreach_children_recursive\n"); //NOLINT
       return;
    }
    if (callback == NULL) {
-      fprintf(stderr, "Warning: NULL callback passed to entity_foreach_children_recursive\n"); //NOLINT
+      fprintf(stderr, "[EntiTree]: Warning: NULL callback passed to entity_foreach_children_recursive\n"); //NOLINT
       return;
    }
    if (filter == NULL) {
-      fprintf(stderr, "Warning: NULL filter passed to entity_foreach_children_recursive\n"); //NOLINT
+      fprintf(stderr, "[EntiTree]: Warning: NULL filter passed to entity_foreach_children_recursive\n"); //NOLINT
       return;
    }
    // TODO: should we callback before or after recursing into children?
@@ -246,11 +248,11 @@ void entity_foreach_children_recursive_filtered(
 
 void entity_foreach_children_recursive(Entity *entity, int depth, void (*callback)(struct entity *entity, int depth)) {
    if (entity == NULL) {
-      fprintf(stderr, "Warning: NULL entity passed to entity_foreach_children_recursive\n"); //NOLINT
+      fprintf(stderr, "[EntiTree]: Warning: NULL entity passed to entity_foreach_children_recursive\n"); //NOLINT
       return;
    }
    if (callback == NULL) {
-      fprintf(stderr, "Warning: NULL callback passed to entity_foreach_children_recursive\n"); //NOLINT
+      fprintf(stderr, "[EntiTree]: Warning: NULL callback passed to entity_foreach_children_recursive\n"); //NOLINT
       return;
    }
    // TODO: should we callback before or after recursing into children?
