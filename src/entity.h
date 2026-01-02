@@ -7,31 +7,48 @@
 #include <stdint.h>
 #include "../third_party/uuid4/src/uuid4.h"
 #include "../third_party/cJSON/cJSON.h"
+#include <assert.h>
+#include <stdio.h>
 
 #define CHILDREN_DEFAULT_CAPACITY 64
 
 /// The types Vector2, Vector3 and Color are compatible with (and provided by) raylib. You can use <raymath.h> functions to manipulate them.
 
+/*************************************************************************************************************/
 // TODO: thoses are copy pasted from raylib.h, figure out how that would work license wise
-#ifndef RAYLIB_H
+#if !defined(RL_VECTOR2_TYPE)
+// Vector2 type
 typedef struct Vector2 {
-    float x;                // Vector x component
-    float y;                // Vector y component
+    float x;
+    float y;
 } Vector2;
+#define RL_VECTOR2_TYPE
+#endif
 
+#if !defined(RL_VECTOR3_TYPE)
+// Vector3 type
 typedef struct Vector3 {
-    float x;                // Vector x component
-    float y;                // Vector y component
-    float z;                // Vector z component
+    float x;
+    float y;
+    float z;
 } Vector3;
+#define RL_VECTOR3_TYPE
+#endif
 
+#if !defined(RL_COLOR_TYPE)
 typedef struct Color {
     unsigned char r;        // Color red value
     unsigned char g;        // Color green value
     unsigned char b;        // Color blue value
     unsigned char a;        // Color alpha value
 } Color;
+#define RL_COLOR_TYPE
 #endif
+
+
+/*************************************************************************************************************/
+
+
 
 typedef uint32_t EntityFlags; /// Entity flags (bitmask)
 
@@ -40,9 +57,9 @@ typedef uint32_t EntityFlags; /// Entity flags (bitmask)
 #define ENTITY_MOVABLE    ((EntityFlags)1 << 2) /// set this flag for entities that can move
 #define ENTITY_COLLIDABLE ((EntityFlags)1 << 3) /// set this flag for entities that can collide with others
 
-#define ENTITY_2D_OBJECT ( ENTITY_DRAWABLE | ENTITY_MOVABLE | ENTITY_COLLIDABLE)
-#define ENTITY_3D_OBJECT (ENTITY_IS_3D | ENTITY_DRAWABLE | ENTITY_MOVABLE | ENTITY_COLLIDABLE)
-#define ENTITY_LOGIC     (EntityFlags)0
+#define ENTITY_2D_OBJECT ( ENTITY_DRAWABLE | ENTITY_MOVABLE | ENTITY_COLLIDABLE)                /// 2D object entity convenience flag
+#define ENTITY_3D_OBJECT (ENTITY_IS_3D | ENTITY_DRAWABLE | ENTITY_MOVABLE | ENTITY_COLLIDABLE)  /// 3D object entity convenience flag
+#define ENTITY_LOGIC     (EntityFlags)0                                                         /// logic-only entity convenience flag (no drawable, no movable, no collidable)
 
 
 /// Entity position union (2D or 3D)
@@ -50,8 +67,8 @@ typedef uint32_t EntityFlags; /// Entity flags (bitmask)
 /// both EntityPosition pos = {{x, y, z}}; and EntityPosition pos = {{x, y}};
 /// the compiler will complain with -Wmissing-field-initializers in the second case...
 typedef union EntityPos {
-   Vector3 pos3d;
-   Vector2 pos2d;
+   Vector3 as_vec3;
+   Vector2 as_vec2;
 } EntityPos;
 
 /// Entity size union (2D or 3D)
@@ -59,8 +76,8 @@ typedef union EntityPos {
 /// both EntitySize s = {{x, y, z}}; and EntitySize s = {{x, y}};
 /// the compiler will complain with -Wmissing-field-initializers in the second case...
 typedef union EntitySize {
-   Vector3 size3d;
-   Vector2 size2d;
+   Vector3 as_vec3;
+   Vector2 as_vec2;
 } EntitySize;
 
 /// Entity speed union (2D or 3D)
@@ -68,8 +85,8 @@ typedef union EntitySize {
 /// both EntitySpeed s = {{x, y, z}}; and EntitySpeed speed = {{x, y}};
 /// the compiler will complain with -Wmissing-field-initializers in the second case...
 typedef union EntitySpeed {
-   Vector3 speed3d;
-   Vector2 speed2d;
+   Vector3 as_vec3;
+   Vector2 as_vec2;
 } EntitySpeed;
 
 /// the main entity struct
@@ -83,6 +100,8 @@ typedef struct entity {
    char        name[256];
    char        uuid[UUID4_LEN];
 
+   void           *user_data;                               /// pointer to user data (can be NULL)
+   void           (*destroy_user_data)(struct entity *entity);    /// function to destroy data (can be NULL), called on `entity_destroy_children()`, optional, you could also manage memory manually
    cJSON          (*user_data_to_json)(void *user_data);      /// function to serialize user data to JSON (can be NULL), optional
    void           *(*user_data_from_json)(cJSON *json);       /// function to deserialize user data from JSON (can be NULL), optional
 
@@ -96,16 +115,24 @@ typedef struct entity {
 
 } Entity;
 
+#define DRAW(entity_ptr) do {                                                             \
+   assert((entity_ptr) != NULL /*entity is NULL*/);                                       \
+   if ((entity_ptr)->draw_func != NULL) {                                                 \
+         (entity_ptr)->draw_func(entity_ptr);                                             \
+   } else {                                                                               \
+      fprintf(stderr, "[EntiTree]: Warning: entity '%s' has no draw_func set\n", (entity_ptr)->name);/*NOLINT*/ \
+   }                                                                                      \
+} while(0)
+
+
 void debug_print_entity_flags(EntityFlags flags);
 void debug_print_entity_flags_table(EntityFlags flags);
 void debug_entity_flags_string(EntityFlags flags, char *buffer, size_t buffer_size);
 
-/// Resize the children array of an entity
-/// TODO: remove this from the public API as this is managed internally by `entity_add_children()`
-void entity_children_resize(Entity *entity, size_t new_capacity);
 
 /// Add a child (passed by value). The memory of children is managed by the parent entity. You can free it with `entity_destroy_children(parent)`.
-int entity_add_children(Entity *parent, Entity child);
+/// Returns a pointer to the newly added child within the parent's children array.
+Entity *entity_add_children(Entity *parent, Entity child);
 
 // TODO: implement entity_remove_child(Entity *parent, size_t index);
 
@@ -155,6 +182,9 @@ void entity_foreach_children_recursive_filtered( Entity *entity, int depth, void
 
 /// Destroy recursively all children of an entity and free their memory
 void entity_destroy_children(Entity *entity);
+
+/// Default function to destroy user data (simply frees the pointer)
+void default_destroy_user_data(Entity *entity);
 
 
 #endif // ENTITY_H

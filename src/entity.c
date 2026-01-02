@@ -297,3 +297,9 @@ void entity_destroy_children(Entity *entity) {
       entity->children_capacity = 0;
    }
 }
+
+
+void default_destroy_user_data(Entity *entity) {
+   printf("[EntiTree]: Freeing data for entity: %s\n", entity->name);
+   free(entity->user_data);
+}
