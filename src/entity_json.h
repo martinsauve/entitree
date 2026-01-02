@@ -5,6 +5,6 @@
 
 
 cJSON *entity_to_json(Entity *entity);
-void dump_entity_tree_json(Entity *root);
+void entity_dump_tree_json(Entity *root);
 
 #endif //ENTITY_JSON_H

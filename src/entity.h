@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "../third_party/uuid4/src/uuid4.h"
+#include "../third_party/cJSON/cJSON.h"
 
 #define CHILDREN_DEFAULT_CAPACITY 64
 
@@ -81,6 +82,9 @@ typedef struct entity {
    Color          color;
    char        name[256];
    char        uuid[UUID4_LEN];
+
+   cJSON          (*user_data_to_json)(void *user_data);      /// function to serialize user data to JSON (can be NULL), optional
+   void           *(*user_data_from_json)(cJSON *json);       /// function to deserialize user data from JSON (can be NULL), optional
 
    struct entity  *parent;
 
