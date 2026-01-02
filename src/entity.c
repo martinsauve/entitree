@@ -84,6 +84,17 @@ bool entity_is_descendant_of(Entity *possible_descendant, Entity *entity) {
 }
 
 
+EntityPos entity_relative_position(Entity *entity) {
+   EntityPos rel_pos = entity->pos;
+   Entity *current = entity->parent;
+   while (current != NULL) {
+      rel_pos.as_vec3.x += current->pos.as_vec3.x;
+      rel_pos.as_vec3.y += current->pos.as_vec3.y;
+      rel_pos.as_vec3.z += current->pos.as_vec3.z;
+      current = current->parent;
+   }
+   return rel_pos;
+}
 
 
 bool entity_children_contains(Entity *self, Entity *possible_child) {
@@ -116,8 +127,9 @@ Entity *entity_add_children(Entity *parent, Entity child) {
    }
    assert(parent->children_count < parent->children_capacity /* child count exceeds capacity after resize */);
    parent->children[parent->children_count] = child;
+   parent->children[parent->children_count].parent = parent;
    parent->children_count++;
-   return EXIT_SUCCESS;
+   return &parent->children[parent->children_count - 1];
 }
 
 
@@ -263,11 +275,18 @@ void entity_foreach_children_recursive(Entity *entity, int depth, void (*callbac
    }
 }
 
+
+
 // TODO: this function is recursive, figure out the implications for deep entity trees.
 
 void entity_destroy_children(Entity *entity) {
    assert(entity != NULL /* attemptying to free NULL entity */);
 
+   /// Call the user-defined destroy function for user_data if it exists
+   if (entity->user_data != NULL && entity->destroy_user_data != NULL) {
+      entity->destroy_user_data(entity);
+      entity->user_data = NULL;
+   }
    if (entity->children != NULL) {
       for (size_t i = 0; i < entity->children_count; i++) {
          entity_destroy_children(&entity->children[i]);

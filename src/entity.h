@@ -125,6 +125,9 @@ bool entity_is_ancestor_of(Entity *possible_ancestor, Entity *entity);
 /// Check if `possible_descendant` is somewhere in the children tree of `entity`
 bool entity_is_descendant_of(Entity *possible_descendant, Entity *entity);
 
+/// Get the computed position of an entity relative to the world (taking into account parent positions)
+EntityPos entity_relative_position(Entity *entity);
+
 /// Get a child entity by index in the children array
 Entity *entity_get_child(Entity *entity, size_t index);
 
