@@ -11,12 +11,22 @@ OBJECTS := $(SOURCES:.c=.o)
 DEPENDS := $(patsubst %.c,%.d, $(SOURCES))
 CFLAGS += -MMD -MP
 
-run: build/test makefile
-	./build/test
+run: build/testRl makefile
+	./build/testRl
+
+#run: build/test makefile
+#	./build/test
+
+build/testRl: build/testRl.o build/entity.o build/uuid4.o build/entity_json.o build/cJSON.o
+	$(CC) -o $@ $^ $(CFLAGS) $(STATIC_LFLAGS)
 
 build/test: build/test.o build/entity.o build/uuid4.o build/entity_json.o build/cJSON.o
 	$(CC) -o $@ $^ $(CFLAGS) $(STATIC_LFLAGS)
-build/test.o: src/test.c src/entity.o build/uuid4.o
+
+build/testRl.o: src/testRl.c
+	$(CC) -o $@ -c $< $(CFLAGS)
+
+build/test.o: src/test.c src/entity.o build/uuid4.o build/entity_json.o build/cJSON.o
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 build/entity.o: src/entity.c
