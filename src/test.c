@@ -3,12 +3,10 @@
 #include <assert.h>
 #include "entity_json.h"
 #include <raylib.h>
+#include <raymath.h>
 
 
 
-void draw_player(Entity *player) {
-   printf("drawing player %s", player->name);
-}
 
 void print_entity(Entity *entity, int depth) {
    for (int i = 0; i < depth; ++i) printf(" | "); // indent based on depth
@@ -50,12 +48,12 @@ int test_entity(void)
          );
 
    entity_add_children(entity_get_child(&root, 0), childofchild);
-   entity_foreach_children_recursive(&root, 0, print_entity);
+   entity_foreach_children_recursive(&root, 0, &print_entity);
    //assert(root.children == NULL);
    //printf("-----------------\n");
    //entity_foreach_children_recursive(&root, 0, print_entity);
    printf("-----------------\n");
-   dump_entity_tree_json(&root);
+   entity_dump_tree_json(&root);
    debug_print_entity_flags_table(root.flags);
    entity_destroy_children(&root);
    return EXIT_SUCCESS;

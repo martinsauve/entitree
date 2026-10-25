@@ -7,7 +7,12 @@ typedef struct {
    Model model;
 } UserData;
 
-// TODO: entity3d are really voxels for now, introducing the all models stuff is another can of worms, the current system is not really designed for that.
+// TODO: entity3d are really voxels for now, introducing the models stuff is another can of worms, the current system is not really designed for that.
+// As you can see, the current implementation uses user_data to store the model datastructure,
+// this may need to be generalized, but I'd like to keep entiTree renderer-agnostic,
+// so if i want something more elegant, I need to have an entire 3d model abstraction layer and
+// the user needs to provide the implementation which is even worse than the current situation. IDK what to do here.
+
 void draw_entity_3d(Entity *entity) {
    float angle = ((UserData *)(entity->user_data))->angle;
    Model model = ((UserData *)(entity->user_data))->model;
@@ -26,7 +31,7 @@ void draw_entity_3d(Entity *entity) {
 // TODO: should be provided by entiTree as a helper function
 void destroy_cube_data(Entity *entity) {
    printf("[EntiTree]: Freeing cube data for entity: %s\n", entity->name);
-   UnloadModel(((UserData *)(entity->user_data))->model);
+   //UnloadModel(((UserData *)(entity->user_data))->model);
    free(entity->user_data);
 }
 
@@ -39,19 +44,6 @@ void draw_entity_2d(Entity *entity) {
          );
 }
 
-// TODO: should be provided by entiTree as a helper function
-void draw_callback(struct entity *entity, int depth) {
-   (void)depth; // unused
-   DRAW(entity);
-}
-
-bool entity_is_3d_object(struct entity *entity) {
-   return entity->flags & ENTITY_3D_OBJECT;
-}
-
-bool entity_is_2d_object(struct entity *entity) {
-   return entity->flags & ENTITY_2D_OBJECT;
-}
 
 // No filter
 bool entity_all(struct entity *entity) {

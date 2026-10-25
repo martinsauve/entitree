@@ -162,6 +162,20 @@ int entity_recursive_count_children(Entity *parent, int depth_limit) {
 }
 
 
+void draw_callback(struct entity *entity, int depth) {
+   (void)depth; // unused
+   DRAW(entity);
+}
+
+bool entity_is_3d_object(struct entity *entity) {
+   return entity->flags & ENTITY_3D_OBJECT;
+}
+
+bool entity_is_2d_object(struct entity *entity) {
+   return entity->flags & ENTITY_2D_OBJECT;
+}
+
+
 Entity *entity_get_parent(Entity *entity) {
    return entity->parent;
 }

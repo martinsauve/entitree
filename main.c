@@ -1,8 +1,7 @@
-#include <raylib.h>
 #include <raymath.h>
 #include <time.h>
 #include <assert.h>
-#include "entity.h"
+#include "src/entity.h"
 
 #define SHOW_FPS
 #define RL_WINDOW_CONFIG_FLAGS (FLAG_MSAA_4X_HINT | FLAG_WINDOW_UNDECORATED )
@@ -121,5 +120,5 @@ int main(void)
       }
       EndDrawing();
    }
-   return 0;
+   return EXIT_SUCCESS;
 }

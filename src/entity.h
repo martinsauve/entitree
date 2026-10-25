@@ -124,6 +124,9 @@ typedef struct entity {
    }                                                                                      \
 } while(0)
 
+/// A callback function that calls the entity's draw function. Useful for `entity_foreach_children_recursive()`. It simply calls the DRAW() macro but accepts
+/// the required signature for the callback. This is a convenience function, please do not hesitate to write your own custom draw callback if needed.
+void draw_callback(struct entity *entity, int depth);
 
 void debug_print_entity_flags(EntityFlags flags);
 void debug_print_entity_flags_table(EntityFlags flags);
@@ -145,6 +148,12 @@ int entity_recursive_count_children(Entity *parent, int depth_limit);
 
 /// return true if the entity has no parent
 bool entity_is_root(Entity *entity);
+
+/// A filter function that returns true if the the flags ENTITY_3D_OBJECT are set. Useful for `entity_foreach_children_recursive_filtered()`.
+bool entity_is_3d_object(Entity *entity);
+
+/// A filter function that returns true if the the flags ENTITY_2D_OBJECT are set. Useful for `entity_foreach_children_recursive_filtered()`.
+bool entity_is_2d_object(Entity *entity);
 
 /// Check if `possible_ancestor` is somewhere in the ancestry tree of `entity`
 bool entity_is_ancestor_of(Entity *possible_ancestor, Entity *entity);
